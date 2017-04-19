@@ -18,34 +18,19 @@ namespace kcsMemberCollector {
         private string m_logFileName;
         private HttpClient m_client;
         private List<long> m_lstMemberIds;
-        public kcClient(string token, string server, long min, long max, string clientName = "defaultClient") {
-            m_client = new HttpClient();
-            m_clientName = clientName;
-            m_token = token;
-             m_server = server;
-            m_lstMemberIds = new List<long>();
-            for (long i = min; i <= max; i++)
-                m_lstMemberIds.Add(i);
-            var rnd = new Random();
-            m_lstMemberIds = m_lstMemberIds.OrderBy(item => rnd.Next()).ToList();
-            string serverFolder = server.Replace('.', '_');
-            Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), serverFolder));
-            m_exportFileName = Path.Combine(serverFolder, string.Format("{0}-{1}_{2}.txt", m_server.Replace('.', '_'), min, max));
-            m_logFileName = Path.Combine(serverFolder, string.Format("{0}.log", m_server.Replace('.', '_')));
-            RemoveDuplicateId();
-        }
-
-        public kcClient(string token, string server, List<long> memberIds, string clientName = "defaultClient") {
+        public kcClient(string token, string server, long min, long max, string serverName, string clientName = "default") {
             m_client = new HttpClient();
             m_clientName = clientName;
             m_token = token;
             m_server = server;
             m_lstMemberIds = new List<long>();
-
+            for (long i = min; i <= max; i++)
+                m_lstMemberIds.Add(i);
             var rnd = new Random();
-            m_lstMemberIds = memberIds.OrderBy(item => rnd.Next()).ToList();
-            m_exportFileName = string.Format("{0}-lst.txt", m_server.Replace('.', '_'));
-            m_logFileName = string.Format("{0}-lst.log", m_server.Replace('.', '_'));
+            m_lstMemberIds = m_lstMemberIds.OrderBy(item => rnd.Next()).ToList();
+            Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), serverName));
+            m_exportFileName = Path.Combine(serverName, string.Format("{0}-{1}.json", min, max));
+            m_logFileName = Path.Combine(serverName, "kcsMemberCollector.log");
             RemoveDuplicateId();
         }
 
@@ -66,17 +51,17 @@ namespace kcsMemberCollector {
             double count = m_lstMemberIds.Count;
             double current = 0;
             foreach (var memberId in m_lstMemberIds) {
-                var memberInfo = await GetMemberInfo(memberId);
-                if (memberInfo != null)
-                    Log(string.Format("Current Member Id: {0} acquired. {1:f2}%", memberId, (current / count * 100.0)));
+                var infoResult = await GetMemberInfo(memberId);
+                if (infoResult)
+                    Utils.Log(string.Format("Current Member Id: {0} acquired. {1:f2}%", memberId, (current / count * 100.0)), m_logFileName, m_clientName);
                 else
-                    Log("Current Member Id: " + memberId + " is null.");
+                    Utils.Log("Current Member Id: " + memberId + " is null.", m_logFileName, m_clientName);
                 current++;
             }
-            Log("RUA.");
+            Utils.Log("RUA.", m_logFileName, m_clientName);
         }
 
-        private async Task<string> GetMemberInfo(long memberId) {
+        private async Task<bool> GetMemberInfo(long memberId) {
             try {
 
                 var postContent = new Dictionary<string, string> {
@@ -90,25 +75,25 @@ namespace kcsMemberCollector {
                 var respones = await m_client.SendAsync(httpReqMsg);
                 var rawResult = await respones.Content.ReadAsStringAsync();
                 var rawJson = rawResult.Substring(7);
-                dynamic json = JValue.Parse(rawJson);
+                dynamic json = JToken.Parse(rawJson);
                 if ((int)json.api_result != 1) {
                     string msg = json.api_result_msg;
-                    Log(string.Format("{0}: Error on acquiring member data, code: {1}.", memberId, json.api_result));
+                    Utils.Log(string.Format("{0}: Error on acquiring member data, code: {1}.", memberId, json.api_result), m_logFileName, m_clientName);
                     if ((int)json.api_result == 201) {
                         Environment.Exit(0);
                     }
-                    return null;
+                    return false;
                 }
 
                 using (StreamWriter sw = new StreamWriter(new FileStream(m_exportFileName, FileMode.Append), Encoding.UTF8)) {
                     sw.WriteLine(rawJson);
                 }
 
-                return rawJson;
+                return true;
             } catch (Exception e) {
-                Log("Exception on GetMember: " + memberId);
-                Log(e.Message);
-                return null;
+                Utils.Log("Exception on GetMember: " + memberId, m_logFileName, m_clientName);
+                Utils.Log(e.Message, m_logFileName, m_clientName);
+                return false;
             }
         }
 
@@ -122,29 +107,52 @@ namespace kcsMemberCollector {
                         using (StreamReader sr = new StreamReader(new FileStream(file, FileMode.Open, FileAccess.Read), Encoding.UTF8)) {
                             string line;
                             while ((line = sr.ReadLine()) != null) {
-                                dynamic json = JValue.Parse(line);
+                                dynamic json = JToken.Parse(line);
                                 long id = (long)json.api_data.api_member_id;
                                 if (!m_lstMemberIds.Remove(id)) {
-                                    Log("Remove ID error: " + id);
+                                    Utils.Log("Remove ID error: " + id, m_logFileName, m_clientName);
                                 }
                             }
                         }
                     }
                 }
             } catch (Exception e) {
-                Log("RemoveDuplicateId Exception: " + e.Message);
+                Utils.Log("RemoveDuplicateId Exception: " + e.Message, m_logFileName, m_clientName);
                 throw;
             }
-            Log("Total removed duplicated IDs: " + (prevCount - m_lstMemberIds.Count));
+            Utils.Log("Total removed duplicated IDs: " + (prevCount - m_lstMemberIds.Count), m_logFileName, m_clientName);
         }
 
-        public void Log(string log) {
-            string s = log + " - by " + m_clientName;
-            Console.WriteLine(s);
-            using (StreamWriter sw = new StreamWriter(new FileStream(m_logFileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite), Encoding.UTF8)) {
-                sw.WriteLine(string.Format("[{0}] {1}", DateTime.UtcNow.ToString(), s));
+        //public void Log(string log) {
+        //    string s = log + " - by " + m_clientName;
+        //    Console.WriteLine(s);
+        //    using (StreamWriter sw = new StreamWriter(new FileStream(m_logFileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite), Encoding.UTF8)) {
+        //        sw.WriteLine(string.Format("[{0}] {1}", DateTime.UtcNow.ToString(), s));
+        //    }
+
+        //}
+    }
+
+
+    public static class Utils {
+        private static object locker = new object();
+        public static void Log(string log, string outputPath, string belongs, ConsoleColor fgc = ConsoleColor.Gray, ConsoleColor bgc = ConsoleColor.Black) {
+            lock (locker) {
+                using (StreamWriter sw = new StreamWriter(new FileStream(outputPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite), Encoding.UTF8)) {
+                    string s = string.Format("[{0}] {1} - {2}", DateTime.UtcNow.ToString(), log, belongs);
+                    string head = string.Format("[{0}] ", DateTime.UtcNow.ToString());
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                    Console.Write(head);
+                    Console.BackgroundColor = bgc;
+                    Console.ForegroundColor = fgc;
+                    Console.WriteLine(log + " - " + belongs);
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                    sw.WriteLine(s);
+                }
             }
-            
         }
     }
+
 }

@@ -1,32 +1,56 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Diagnostics;
+using System.Text;
+
 namespace kcsMemberCollector {
     public class MemberCollector {
 
         public class Range { public int lo; public int hi; }
 
         public static readonly List<string> WorldServerAddr = new List<string>() {
-               "203.104.209.71"  , // 横須賀鎮守府   
-               "203.104.209.87"  , // 呉鎮守府        
-               "125.6.184.16"    , // 佐世保鎮守府    
-               "125.6.187.205"   , // 舞鶴鎮守府      
-               "125.6.187.229"   , // 大湊警備府      
-               "125.6.187.253"   , // トラック泊地    
-               "125.6.188.25"    , // リンガ泊地      
-               "203.104.248.135" , // ラバウル基地    
-               "125.6.189.7"     , // ショートランド泊地
-               "125.6.189.39"    , // ブイン基地
-               "125.6.189.71"    , // タウイタウイ泊地 
-               "125.6.189.103"   , // パラオ泊地
-               "125.6.189.135"   , // ブルネイ泊地    
-               "125.6.189.167"   , // 単冠湾泊地      
-               "125.6.189.215"   , // 幌筵泊地        
-               "125.6.189.247"   , // 宿毛湾泊地      
-               "203.104.209.23"  , // 鹿屋基地        
-               "203.104.209.39"  , // 岩川基地        
-               "203.104.209.55"  , // 佐伯湾泊地      
-               "203.104.209.102" , // 柱島泊地        
+               "203.104.209.71"  , // 01.横須賀鎮守府   
+               "203.104.209.87"  , // 02.呉鎮守府        
+               "125.6.184.16"    , // 03.佐世保鎮守府    
+               "125.6.187.205"   , // 04.舞鶴鎮守府      
+               "125.6.187.229"   , // 05.大湊警備府      
+               "125.6.187.253"   , // 06.トラック泊地    
+               "125.6.188.25"    , // 07.リンガ泊地      
+               "203.104.248.135" , // 08.ラバウル基地    
+               "125.6.189.7"     , // 09.ショートランド泊地
+               "125.6.189.39"    , // 10.ブイン基地
+               "125.6.189.71"    , // 11.タウイタウイ泊地 
+               "125.6.189.103"   , // 12.パラオ泊地
+               "125.6.189.135"   , // 13.ブルネイ泊地    
+               "125.6.189.167"   , // 14.単冠湾泊地      
+               "125.6.189.215"   , // 15.幌筵泊地        
+               "125.6.189.247"   , // 16.宿毛湾泊地      
+               "203.104.209.23"  , // 17.鹿屋基地        
+               "203.104.209.39"  , // 18.岩川基地        
+               "203.104.209.55"  , // 19.佐伯湾泊地      
+               "203.104.209.102" , // 20.柱島泊地        
+        };
+
+        public static readonly List<string> WorldServerName = new List<string>() {
+              /*203.104.209.71 */ "01.横須賀鎮守府",
+              /*203.104.209.87 */ "02.呉鎮守府",
+              /*125.6.184.16   */ "03.佐世保鎮守府",
+              /*125.6.187.205  */ "04.舞鶴鎮守府",
+              /*125.6.187.229  */ "05.大湊警備府",
+              /*125.6.187.253  */ "06.トラック泊地",
+              /*125.6.188.25   */ "07.リンガ泊地",
+              /*203.104.248.135*/ "08.ラバウル基地",
+              /*125.6.189.7    */ "09.ショートランド泊地",
+              /*125.6.189.39   */ "10.ブイン基地",
+              /*125.6.189.71   */ "11.タウイタウイ泊地",
+              /*125.6.189.103  */ "12.パラオ泊地",
+              /*125.6.189.135  */ "13.ブルネイ泊地",
+              /*125.6.189.167  */ "14.単冠湾泊地",
+              /*125.6.189.215  */ "15.幌筵泊地",
+              /*125.6.189.247  */ "16.宿毛湾泊地",
+              /*203.104.209.23 */ "17.鹿屋基地",
+              /*203.104.209.39 */ "18.岩川基地",
+              /*203.104.209.55 */ "19.佐伯湾泊地",
+              /*203.104.209.102*/ "20.柱島泊地",
         };
 
         public static int GenerateRanges(int min, int max, int numberOfRanges, out List<Range> ranges) {
@@ -65,68 +89,61 @@ namespace kcsMemberCollector {
         /// </summary>
         /// <param name="args"></param>
         public static void Main(string[] args) {
+
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
             CommandLineParser.CommandLineParser parser = new CommandLineParser.CommandLineParser();
             CommandLineParser.Arguments.ValueArgument<string> tokenArg =
                 new CommandLineParser.Arguments.ValueArgument<string>('t', "token", "User token for Kancolle identification.");
             tokenArg.Optional = false;
             tokenArg.AllowMultiple = false;
 
-            CommandLineParser.Arguments.ValueArgument<string> serverArg =
-                new CommandLineParser.Arguments.ValueArgument<string>('s', "server", "Kancolle server IP address to connect.");
-            serverArg.Optional = false;
-            serverArg.AllowMultiple = false;
+            CommandLineParser.Arguments.ValueArgument<int> serverIdArg =
+                new CommandLineParser.Arguments.ValueArgument<int>('s', "server", "Kancolle server ID address to connect.");
+            serverIdArg.Optional = false;
+            serverIdArg.AllowMultiple = false;
 
             CommandLineParser.Arguments.ValueArgument<long> rangeArg =
                 new CommandLineParser.Arguments.ValueArgument<long>('r', "range", "Assuming member ID range.");
             rangeArg.Optional = true;
             rangeArg.AllowMultiple = true;
 
-            CommandLineParser.Arguments.ValueArgument<long> singleIdArg =
-                new CommandLineParser.Arguments.ValueArgument<long>('i', "id", "Single Id.");
-            singleIdArg.Optional = true;
-            singleIdArg.AllowMultiple = true;
 
-            CommandLineParser.Arguments.ValueArgument<int> numberOfThreadArg =
-                new CommandLineParser.Arguments.ValueArgument<int>('n', "thread", "Divided the task into multi threads (Max 15)");
-            numberOfThreadArg.Optional = true;
-            numberOfThreadArg.AllowMultiple = false;
+            CommandLineParser.Arguments.ValueArgument<int> numberOfClientArg =
+                new CommandLineParser.Arguments.ValueArgument<int>('n', "thread", "Divided the task into multi clients (Max 50)");
+            numberOfClientArg.Optional = true;
+            numberOfClientArg.AllowMultiple = false;
 
             parser.Arguments.Add(tokenArg);
-            parser.Arguments.Add(serverArg);
+            parser.Arguments.Add(serverIdArg);
             parser.Arguments.Add(rangeArg);
-            parser.Arguments.Add(singleIdArg);
-            parser.Arguments.Add(numberOfThreadArg);
+            parser.Arguments.Add(numberOfClientArg);
 
             try {
                 parser.ParseCommandLine(args);
-                int numOfThreads = 1;
-                if (numberOfThreadArg.Parsed && numberOfThreadArg.Value > 1 && numberOfThreadArg.Value <= 100) {
-                    numOfThreads = numberOfThreadArg.Value;
+                int numOfClients = 1;
+                if (numberOfClientArg.Parsed && numberOfClientArg.Value > 1 && numberOfClientArg.Value <= 50) {
+                    numOfClients = numberOfClientArg.Value;
                 }
 
                 string token = tokenArg.Value;
-                string server = serverArg.Value;
-
-                if (singleIdArg.Parsed) {
-                    List<long> ids = singleIdArg.Values;
-                    var client = new kcClient(token, server, ids);
-                    client.StartCacheMembersAsync().Wait();
-
-                } else if (rangeArg.Parsed) {
+                string serverAddr = WorldServerAddr[serverIdArg.Value - 1];
+                string serverName = WorldServerName[serverIdArg.Value - 1];
+                if (rangeArg.Parsed) {
                     long min = rangeArg.Values[0];
                     long max = rangeArg.Values[1];
                     List<Range> threadGroup = null;
                     List<Task> kcClients = new List<Task>();
-                    if (numOfThreads > 1) {
-                        int n = GenerateRanges((int)min, (int)max, numOfThreads, out threadGroup);
+                    if (numOfClients > 1) {
+                        int n = GenerateRanges((int)min, (int)max, numOfClients, out threadGroup);
 
                         for (int i = 0; i < n; i++) {
-                            kcClients.Add(new kcClient(token, server, threadGroup[i].lo, threadGroup[i].hi, "Thread ID: " + i).StartCacheMembersAsync());
+                            kcClients.Add(new kcClient(token, serverAddr, threadGroup[i].lo, threadGroup[i].hi, serverName, "Client ID: " + i).StartCacheMembersAsync());
                         }
                         Task.WhenAll(kcClients).Wait();
 
                     } else {
-                        var client = new kcClient(token, server, min, max);
+                        var client = new kcClient(token, serverAddr, min, max, serverName);
                         client.StartCacheMembersAsync().Wait();
 
                     }
