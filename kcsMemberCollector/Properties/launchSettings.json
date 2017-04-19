@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "kcsMemberCollector": {
+      "commandName": "Project",
+      "commandLineArgs": "-t dd7064335b39b73ce03b522e7c034f01c5fb4e01 -s 125.6.189.135 -i 13143737"
+    }
+  }
+}
