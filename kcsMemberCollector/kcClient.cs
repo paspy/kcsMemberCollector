@@ -54,8 +54,8 @@ namespace kcsMemberCollector {
                 var infoResult = await GetMemberInfo(memberId);
                 if (infoResult)
                     Utils.Log(string.Format("Current Member Id: {0} acquired. {1:f2}%", memberId, (current / count * 100.0)), m_logFileName, m_clientName);
-                else
-                    Utils.Log("Current Member Id: " + memberId + " is null.", m_logFileName, m_clientName);
+                //else
+                //    Utils.Log("Current Member Id: " + memberId + " is null.", m_logFileName, m_clientName);
                 current++;
             }
             Utils.Log("RUA.", m_logFileName, m_clientName);
@@ -122,15 +122,6 @@ namespace kcsMemberCollector {
             }
             Utils.Log("Total removed duplicated IDs: " + (prevCount - m_lstMemberIds.Count), m_logFileName, m_clientName);
         }
-
-        //public void Log(string log) {
-        //    string s = log + " - by " + m_clientName;
-        //    Console.WriteLine(s);
-        //    using (StreamWriter sw = new StreamWriter(new FileStream(m_logFileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite), Encoding.UTF8)) {
-        //        sw.WriteLine(string.Format("[{0}] {1}", DateTime.UtcNow.ToString(), s));
-        //    }
-
-        //}
     }
 
 
@@ -141,14 +132,14 @@ namespace kcsMemberCollector {
                 using (StreamWriter sw = new StreamWriter(new FileStream(outputPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite), Encoding.UTF8)) {
                     string s = string.Format("[{0}] {1} - {2}", DateTime.UtcNow.ToString(), log, belongs);
                     string head = string.Format("[{0}] ", DateTime.UtcNow.ToString());
-                    Console.BackgroundColor = ConsoleColor.Black;
-                    Console.ForegroundColor = ConsoleColor.Gray;
+                    //Console.BackgroundColor = ConsoleColor.Black;
+                    //Console.ForegroundColor = ConsoleColor.Gray;
                     Console.Write(head);
-                    Console.BackgroundColor = bgc;
-                    Console.ForegroundColor = fgc;
+                    //Console.BackgroundColor = bgc;
+                    //Console.ForegroundColor = fgc;
                     Console.WriteLine(log + " - " + belongs);
-                    Console.BackgroundColor = ConsoleColor.Black;
-                    Console.ForegroundColor = ConsoleColor.Gray;
+                    //Console.BackgroundColor = ConsoleColor.Black;
+                    //Console.ForegroundColor = ConsoleColor.Gray;
                     sw.WriteLine(s);
                 }
             }
