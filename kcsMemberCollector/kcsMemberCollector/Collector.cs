@@ -54,8 +54,7 @@ namespace kcsMemberCollector {
                 var infoResult = await GetMemberInfo(memberId);
                 if (infoResult)
                     Utils.Log(string.Format("Current Member Id: {0} acquired. {1:f2}%", memberId, (current / count * 100.0)), m_logFileName, m_clientName);
-                //else
-                //    Utils.Log("Current Member Id: " + memberId + " is null.", m_logFileName, m_clientName);
+
                 current++;
             }
             Utils.Log("RUA.", m_logFileName, m_clientName);

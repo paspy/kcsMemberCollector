@@ -1,8 +1,28 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System;
 using System.Text;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
+using NLog;
 
 namespace kcsMemberCollector {
+    public class Runner {
+        private readonly ILogger<Runner> _logger;
+
+        public Runner(ILogger<Runner> logger) {
+            _logger = logger;
+        }
+
+        public void DoAction(string name) {
+            _logger.LogDebug(20, "Doing hard work! {Action}", name);
+        }
+
+
+    }
+
     public class App {
 
         public class Range { public int lo; public int hi; }
@@ -80,6 +100,27 @@ namespace kcsMemberCollector {
             return n;
         }
 
+        private static IServiceProvider BuildDI() {
+            var services = new ServiceCollection();
+
+            //Runner is the custom class
+            services.AddTransient<Runner>();
+
+            services.AddSingleton<ILoggerFactory, LoggerFactory>();
+            services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
+            services.AddLogging((builder) => builder.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace));
+
+            var serviceProvider = services.BuildServiceProvider();
+
+            var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+
+            //configure NLog
+            loggerFactory.AddNLog(new NLogProviderOptions { CaptureMessageTemplates = true, CaptureMessageProperties = true });
+            loggerFactory.ConfigureNLog("../../../nlog.config");
+
+            return serviceProvider;
+        }
+
         /// <summary>
         /// Command line arguments
         /// -t/--token 
@@ -91,6 +132,15 @@ namespace kcsMemberCollector {
         public static void Main(string[] args) {
 
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var servicesProvider = BuildDI();
+            var runner = servicesProvider.GetRequiredService<Runner>();
+
+            runner.DoAction("Action1");
+
+            Console.WriteLine("Press ANY key to exit");
+            Console.ReadLine();
+
 
             CommandLineParser.CommandLineParser parser = new CommandLineParser.CommandLineParser();
             CommandLineParser.Arguments.ValueArgument<string> tokenArg =
@@ -118,6 +168,7 @@ namespace kcsMemberCollector {
             parser.Arguments.Add(serverIdArg);
             parser.Arguments.Add(rangeArg);
             parser.Arguments.Add(numberOfClientArg);
+
 
             try {
                 parser.ParseCommandLine(args);
