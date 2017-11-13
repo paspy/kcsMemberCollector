@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.IO.Compression;
 using System.Text;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -99,6 +100,11 @@ namespace kcsMemberCollector {
 
                     }
                 }
+
+                string sourceDir = Path.Combine(Directory.GetCurrentDirectory(), serverName);
+                string destDir = Path.Combine(Directory.GetCurrentDirectory(), serverName + ".zip");
+                ZipFile.CreateFromDirectory(sourceDir, destDir, CompressionLevel.Optimal, false);
+
             } catch (Exception e) {
                 Console.WriteLine(e.Message);
             }
