@@ -8,9 +8,12 @@ using System.Text;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using NLog;
 
 namespace kcsMemberCollector {
     public class Collector {
+        private readonly Logger m_logger = LogManager.GetLogger("Collector");
+
         private string m_clientName;
         private string m_token;
         private string m_server;
