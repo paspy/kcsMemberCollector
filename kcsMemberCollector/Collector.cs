@@ -37,7 +37,7 @@ namespace kcsMemberCollector {
             m_lstMemberIds = m_lstMemberIds.OrderBy(item => s_RND.Next()).ToList();
             Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), serverName));
             if (m_isFormated)
-                m_exportFileName = Path.Combine(serverName, string.Format("{0}-{1}.formated.json", min, max));
+                m_exportFileName = Path.Combine(serverName, string.Format("{0}-{1}_formatted.json", min, max));
             else
                 m_exportFileName = Path.Combine(serverName, string.Format("{0}-{1}.json", min, max));
 
