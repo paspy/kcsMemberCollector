@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -64,7 +65,11 @@ namespace kcsMemberCollector {
 
                 using (var fileStream = new FileStream(m_exportFileName, FileMode.Open)) {
                     fileStream.Seek(0, SeekOrigin.End);
-                    fileStream.SetLength(fileStream.Length - 3); // Hack way to delete last two characters, file must be UTF-8
+                    // Hack way to delete last two characters, file must be UTF-8 (\n\r = 2 bytes, \r = 1 byte)
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                        fileStream.SetLength(fileStream.Length - 3);
+                    else
+                        fileStream.SetLength(fileStream.Length - 2);
                     using (StreamWriter sw = new StreamWriter(fileStream, Encoding.UTF8)) {
                         sw.WriteLine("]");
                     }
