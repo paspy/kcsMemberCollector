@@ -42,10 +42,6 @@ namespace kcsMemberCollector {
 
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            var service = BuildServices();
-            var au = service.GetService<KancolleAuth>();
-            au.Initialize("kyuubee@me.com", "");
-
             CommandLineParser.CommandLineParser parser = new CommandLineParser.CommandLineParser();
             CommandLineParser.Arguments.ValueArgument<string> tokenArg =
                 new CommandLineParser.Arguments.ValueArgument<string>('t', "token", "User token for Kancolle identification.");
@@ -104,7 +100,7 @@ namespace kcsMemberCollector {
                     }
                 }
             } catch (Exception e) {
-                System.Console.WriteLine(e.Message);
+                Console.WriteLine(e.Message);
             }
         }
 
