@@ -74,7 +74,7 @@ namespace kcsMemberCollector {
                 parser.ParseCommandLine(args);
 
                 int numOfClients = 1;
-                if (numberOfClientArg.Parsed && numberOfClientArg.Value > 1 && numberOfClientArg.Value <= 50) {
+                if (numberOfClientArg.Parsed && numberOfClientArg.Value > 1 && numberOfClientArg.Value <= 200) {
                     numOfClients = numberOfClientArg.Value;
                 }
 
