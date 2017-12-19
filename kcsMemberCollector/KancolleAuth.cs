@@ -78,15 +78,17 @@ namespace kcsMemberCollector {
 
                 var dmm_tokenResult = AuthPattens["dmm_token"].Match(htmlResult);
                 if (!dmm_tokenResult.Success) {
+                    m_logger.LogError("Get dmm_token result failed.");
                     throw new Exception("Get dmm_token result failed.");
                 }
                 var tokenResult = AuthPattens["token"].Match(htmlResult);
                 if (!tokenResult.Success) {
+                    m_logger.LogError("Get token result failed.");
                     throw new Exception("Get token result failed.");
                 }
                 var dmm_token = JsonConvert.DeserializeObject<Dictionary<string, string>>(string.Format("{{{0}}}", dmm_tokenResult.Value).Replace(',', ':'));
                 var token = JsonConvert.DeserializeObject<Dictionary<string, string>>(string.Format("{{{0}}}", tokenResult.Value));
-                return new Tuple<string, string>(dmm_token["DMM_TOKEN"], token["token"]);
+                return new Tuple<string, string>(dmm_token["dmm_token"], token["token"]);
 
             } catch (Exception e) {
                 m_logger.LogError(e, "Exception on GetDMMTokensAjax failed.");
