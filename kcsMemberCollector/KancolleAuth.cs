@@ -7,7 +7,7 @@ using System.Text;
 using System.Web;
 using System.Linq;
 using System.Threading.Tasks;
-
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -29,11 +29,19 @@ namespace kcsMemberCollector {
     }
 
     public sealed class KancolleAuth {
+
+        private readonly ILogger<KancolleAuth> m_logger;
+
         private HttpClient m_client;
         private string m_loginId;
         private string m_password;
         private KancolleAccessInfo m_kcAccessInfo;
-        public KancolleAuth(string loginId, string pwd) {
+        private bool m_isInit = false;
+        public KancolleAuth(ILogger<KancolleAuth> logger) {
+            m_logger = logger;
+        }
+
+        public void Initialize(string loginId, string pwd) {
             m_client = new HttpClient(new HttpClientHandler() {
                 AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
                 AllowAutoRedirect = true,
@@ -43,9 +51,13 @@ namespace kcsMemberCollector {
             m_client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0");
             m_loginId = loginId;
             m_password = pwd;
+            m_isInit = true;
+            m_logger.LogInformation("KancolleAuth has been initialized. Current DMM LoginID: {0}", loginId);
         }
 
         public async Task<KancolleAccessInfo> GetKancolleAccessInfo(bool forceUpdate = false) {
+            if (!m_isInit) throw new Exception("Class Not Initialized.");
+
             if (m_kcAccessInfo != null && !forceUpdate) return m_kcAccessInfo;
             var dmmTokens = await GetDMMTokensForAjaxAsync();
             var ajaxTokens = await GetAjaxTokensAsync(dmmTokens.Item1, dmmTokens.Item2);
@@ -77,7 +89,7 @@ namespace kcsMemberCollector {
                 return new Tuple<string, string>(dmm_token["DMM_TOKEN"], token["token"]);
 
             } catch (Exception e) {
-                //nLog.Error(e, "Exception on GetDMMTokensAjax failed.");
+                m_logger.LogError(e, "Exception on GetDMMTokensAjax failed.");
                 throw;
             }
         }
@@ -102,7 +114,7 @@ namespace kcsMemberCollector {
 
                 }
             } catch (Exception e) {
-                //nLog.Error(e, "Exception on GetAjaxTokens failed. ");
+                m_logger.LogError(e, "Exception on GetAjaxTokens failed. ");
                 throw;
             }
         }
@@ -140,7 +152,7 @@ namespace kcsMemberCollector {
                 return osapiUrl;
 
             } catch (Exception e) {
-                //nLog.Error(e, "Exception on GetOSAPIUrl failed. ");
+                m_logger.LogError(e, "Exception on GetOSAPIUrl failed. ");
                 throw;
             }
         }
@@ -208,7 +220,7 @@ namespace kcsMemberCollector {
 
                 return new Tuple<int, string, string>(worldId, worldIP, apiToken);
             } catch (Exception e) {
-                //nLog.Error(e, "Exception on GetOSAPIUrl failed. " + e.Message);
+                m_logger.LogError(e, "Exception on GetOSAPIUrl failed. " + e.Message);
                 throw;
             }
         }

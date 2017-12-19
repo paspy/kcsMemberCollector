@@ -251,4 +251,5 @@ paket-files/
 .idea/
 *.sln.iml
 kcsMemberCollector/cmd.txt
+cmd.txt
 kcsMemberCollector/kcsMemberCollector/accounts.json
