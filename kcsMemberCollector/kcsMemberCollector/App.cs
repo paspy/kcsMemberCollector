@@ -133,14 +133,20 @@ namespace kcsMemberCollector {
 
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            var servicesProvider = BuildDI();
-            var runner = servicesProvider.GetRequiredService<Runner>();
+            //var servicesProvider = BuildDI();
+            //var runner = servicesProvider.GetRequiredService<Runner>();
 
-            runner.DoAction("Action1");
+            //runner.DoAction("Action1");
 
-            Console.WriteLine("Press ANY key to exit");
-            Console.ReadLine();
+            //Console.WriteLine("Press ANY key to exit");
+            //Console.ReadLine();
 
+            KancolleAuth auth = new KancolleAuth(args[0], args[1]);
+
+            var r = auth.GetKancolleAccessInfo().Result;
+
+            Console.WriteLine("{0}", r.Token);
+            return;
 
             CommandLineParser.CommandLineParser parser = new CommandLineParser.CommandLineParser();
             CommandLineParser.Arguments.ValueArgument<string> tokenArg =
@@ -203,6 +209,22 @@ namespace kcsMemberCollector {
             } catch (System.Exception e) {
                 System.Console.WriteLine(e.Message);
             }
+        }
+
+        void GenerateDefaultAccountFile(string loginId, string password) {
+            List<KancolleAccount> lst = new List<KancolleAccount>();
+            for (int i = 1; i <= 20; i++) {
+                KancolleAccount acc = new KancolleAccount();
+                acc.LoginId = string.Format(loginId, i.ToString("D2"));
+                acc.LoginPassword = string.Format(password, i.ToString("D2"));
+                acc.ServerId = i;
+                acc.ServerName = WorldServerName[i - 1].Substring(3);
+                acc.ServerAddress = WorldServerAddr[i - 1];
+                acc.Token = string.Empty;
+                lst.Add(acc);
+            }
+            var json = Newtonsoft.Json.JsonConvert.SerializeObject(lst);
+            System.IO.File.WriteAllText("accounts.json", json);
         }
     }
 }

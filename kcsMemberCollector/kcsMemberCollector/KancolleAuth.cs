@@ -13,6 +13,15 @@ using Newtonsoft.Json.Linq;
 
 namespace kcsMemberCollector {
 
+    public sealed class KancolleAccount {
+        public int ServerId { get; set; }
+        public string ServerName { get; set; }
+        public string LoginId { get; set; }
+        public string ServerAddress { get; set; }
+        public string LoginPassword { get; set; }
+        public string Token { get; set; }
+    }
+
     public sealed class KancolleAccessInfo {
         public int ServerId { get; set; }
         public string ServerAddress { get; set; }
@@ -79,8 +88,8 @@ namespace kcsMemberCollector {
                 using (var httpReqMsg = new HttpRequestMessage()) {
                     httpReqMsg.RequestUri = new Uri(AuthURLs["ajax"]);
                     httpReqMsg.Method = HttpMethod.Post;
-                    httpReqMsg.Headers.Add("Origin", "https://www.dmm.com");
-                    httpReqMsg.Headers.Add("Dmm_Token", dmm_token);
+                    httpReqMsg.Headers.Add("Origin", "https://accounts.dmm.com");
+                    httpReqMsg.Headers.Add("http-dmm-token", dmm_token);
                     httpReqMsg.Headers.Add("X-Requested-With", "XMLHttpRequest");
                     httpReqMsg.Headers.Referrer = new Uri(AuthURLs["login"]);
                     var postData = new Dictionary<string, string> { { "token", token } };
@@ -209,16 +218,18 @@ namespace kcsMemberCollector {
         }
 
         public static readonly Dictionary<string, Regex> AuthPattens = new Dictionary<string, Regex>() {
-            {"dmm_token", new Regex("\"DMM_TOKEN\", \"([\\d|\\w]+)\"", RegexOptions.Compiled) },
-            {"token", new Regex("\"token\": \"([\\d|\\w]+)\"", RegexOptions.Compiled) },
+            //  patterns = {'dmm_token': re.compile(r'http-dmm-token" content="([\d|\w]+)"'),
+            {"dmm_token", new Regex("http-dmm-token\" content=\"([\\d|\\w]+)\"", RegexOptions.Compiled) },
+            //  'token': re.compile(r'token" content="([\d|\w]+)"'),
+            {"token", new Regex("token\" content=\"([\\d|\\w]+)\"", RegexOptions.Compiled) },
             {"reset", new Regex(@"認証エラー", RegexOptions.Compiled) },
             {"osapi", new Regex("URL\\W+:\\W+\"(.*)\",", RegexOptions.Compiled) }
         };
 
         public static readonly Dictionary<string, string> AuthURLs = new Dictionary<string, string>() {
-            { "login",          "https://www.dmm.com/my/-/login/"},
-            { "ajax",           "https://www.dmm.com/my/-/login/ajax-get-token/"},
-            { "auth",           "https://www.dmm.com/my/-/login/auth/"},
+            { "login",          "https://accounts.dmm.com/service/login/password/=/"},
+            { "ajax",           "https://accounts.dmm.com/service/api/get-token/"},
+            { "auth",           "https://accounts.dmm.com/service/login/password/authenticate/"},
             { "game",           "http://www.dmm.com/netgame/social/-/gadgets/=/app_id=854854/"},
             { "make_request",   "http://osapi.dmm.com/gadgets/makeRequest"},
             { "get_world",      "http://203.104.209.7/kcsapi/api_world/get_id/{0}/1/{1}"},
