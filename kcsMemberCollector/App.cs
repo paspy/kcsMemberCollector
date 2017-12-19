@@ -30,7 +30,7 @@ namespace kcsMemberCollector {
 
             return serviceProvider;
         }
-
+         
         /// <summary>
         /// Command line arguments
         /// -t/--token 
@@ -43,6 +43,15 @@ namespace kcsMemberCollector {
 
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
+            var servicesProvider = BuildServices();
+            var runner = servicesProvider.GetRequiredService<KancolleAuth>();
+
+            runner.Initialize(args[0], args[1]);
+            var r = runner.GetKancolleAccessInfo().Result;
+
+            Console.WriteLine("{0}", r.Token);
+
+            return;
             CommandLineParser.CommandLineParser parser = new CommandLineParser.CommandLineParser();
             CommandLineParser.Arguments.ValueArgument<string> tokenArg =
                 new CommandLineParser.Arguments.ValueArgument<string>('t', "token", "User token for Kancolle identification.");
@@ -109,8 +118,6 @@ namespace kcsMemberCollector {
                 Console.WriteLine(e.Message);
             }
         }
-
-
 
         public class Range { public int lo; public int hi; }
 
@@ -185,6 +192,22 @@ namespace kcsMemberCollector {
                 k += bucket_sizes[i];
             }
             return n;
+        }
+
+        void GenerateDefaultAccountFile(string loginId, string password) {
+            List<KancolleAccount> lst = new List<KancolleAccount>();
+            for (int i = 1; i <= 20; i++) {
+                KancolleAccount acc = new KancolleAccount();
+                acc.LoginId = string.Format(loginId, i.ToString("D2"));
+                acc.LoginPassword = string.Format(password, i.ToString("D2"));
+                acc.ServerId = i;
+                acc.ServerName = WorldServerName[i - 1].Substring(3);
+                acc.ServerAddress = WorldServerAddr[i - 1];
+                acc.Token = string.Empty;
+                lst.Add(acc);
+            }
+            var json = Newtonsoft.Json.JsonConvert.SerializeObject(lst);
+            System.IO.File.WriteAllText("accounts.json", json);
         }
     }
 }
