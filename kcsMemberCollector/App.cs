@@ -30,7 +30,7 @@ namespace kcsMemberCollector {
 
             return serviceProvider;
         }
-         
+
         /// <summary>
         /// Command line arguments
         /// -t/--token 
@@ -43,15 +43,6 @@ namespace kcsMemberCollector {
 
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            var servicesProvider = BuildServices();
-            var runner = servicesProvider.GetRequiredService<KancolleAuth>();
-
-            runner.Initialize("kyuubee@me.com","1223Ehrungen");
-            var r = runner.GetKancolleAccessInfo().Result;
-
-            Console.WriteLine("{0}", r.Token);
-
-            return;
             CommandLineParser.CommandLineParser parser = new CommandLineParser.CommandLineParser();
             CommandLineParser.Arguments.ValueArgument<string> tokenArg =
                 new CommandLineParser.Arguments.ValueArgument<string>('t', "token", "User token for Kancolle identification.");
@@ -112,7 +103,9 @@ namespace kcsMemberCollector {
 
                 string sourceDir = Path.Combine(Directory.GetCurrentDirectory(), serverName);
                 string destDir = Path.Combine(Directory.GetCurrentDirectory(), serverName + ".zip");
-                ZipFile.CreateFromDirectory(sourceDir, destDir, CompressionLevel.Optimal, false);
+                if (File.Exists(destDir))
+                    File.Delete(destDir);
+                ZipFile.CreateFromDirectory(sourceDir, destDir, CompressionLevel.Optimal, false, Encoding.UTF8);
 
             } catch (Exception e) {
                 Console.WriteLine(e.Message);
@@ -194,7 +187,7 @@ namespace kcsMemberCollector {
             return n;
         }
 
-        void GenerateDefaultAccountFile(string loginId, string password) {
+        static void GenerateDefaultAccountFile(string loginId, string password) {
             List<KancolleAccount> lst = new List<KancolleAccount>();
             for (int i = 1; i <= 20; i++) {
                 KancolleAccount acc = new KancolleAccount();
