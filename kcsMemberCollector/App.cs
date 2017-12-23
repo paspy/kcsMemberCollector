@@ -46,7 +46,7 @@ namespace kcsMemberCollector {
             var servicesProvider = BuildServices();
             var runner = servicesProvider.GetRequiredService<KancolleAuth>();
 
-            runner.Initialize(args[0], args[1]);
+            runner.Initialize("kyuubee@me.com","1223Ehrungen");
             var r = runner.GetKancolleAccessInfo().Result;
 
             Console.WriteLine("{0}", r.Token);

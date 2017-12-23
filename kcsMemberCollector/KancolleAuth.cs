@@ -86,9 +86,14 @@ namespace kcsMemberCollector {
                     m_logger.LogError("Get token result failed.");
                     throw new Exception("Get token result failed.");
                 }
-                var dmm_token = JsonConvert.DeserializeObject<Dictionary<string, string>>(string.Format("{{{0}}}", dmm_tokenResult.Value).Replace(',', ':'));
-                var token = JsonConvert.DeserializeObject<Dictionary<string, string>>(string.Format("{{{0}}}", tokenResult.Value));
-                return new Tuple<string, string>(dmm_token["dmm_token"], token["token"]);
+
+                //Console.WriteLine(dmm_tokenResult.Value);
+                //Console.WriteLine(tokenResult.Value);
+                var dmm_token = dmm_tokenResult.Value.Substring(25, 32);
+                var token = tokenResult.Value.Substring(16, 32);
+                //var dmm_token = JsonConvert.DeserializeObject<Dictionary<string, string>>(string.Format("{{{0}}}", dmm_tokenResult.Value).Replace(',', ':'));
+                //var token = JsonConvert.DeserializeObject<Dictionary<string, string>>(string.Format("{{{0}}}", tokenResult.Value));
+                return new Tuple<string, string>(dmm_token, token);
 
             } catch (Exception e) {
                 m_logger.LogError(e, "Exception on GetDMMTokensAjax failed.");
@@ -111,8 +116,13 @@ namespace kcsMemberCollector {
 
                     var response = await m_client.SendAsync(httpReqMsg);
                     var jsonResult = await response.Content.ReadAsStringAsync();
-                    var ajaxTokens = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonResult);
-                    return new Tuple<string, string, string>(ajaxTokens["token"], ajaxTokens["login_id"], ajaxTokens["password"]);
+                    //var ajaxTokens = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonResult);
+                    dynamic ajaxTokens = JToken.Parse(jsonResult);
+                    string aJaxtoken = ajaxTokens.body.token;
+                    string ajaxLoginId = ajaxTokens.body.login_id;
+                    string ajaxPassword = ajaxTokens.body.password;
+                    //return new Tuple<string, string, string>(ajaxTokens["token"], ajaxTokens["login_id"], ajaxTokens["password"]);
+                    return new Tuple<string, string, string>(aJaxtoken, ajaxLoginId, ajaxPassword);
 
                 }
             } catch (Exception e) {
@@ -126,14 +136,14 @@ namespace kcsMemberCollector {
                 using (var httpReqMsg = new HttpRequestMessage()) {
                     httpReqMsg.RequestUri = new Uri(AuthURLs["auth"]);
                     httpReqMsg.Method = HttpMethod.Post;
-                    httpReqMsg.Headers.Add("Origin", "https://www.dmm.com");
+                    httpReqMsg.Headers.Add("Origin", "https://accounts.dmm.com");
                     httpReqMsg.Headers.Referrer = new Uri(AuthURLs["login"]);
                     var postData = new Dictionary<string, string> {
                         { "token", token },
                         { "login_id", m_loginId },
                         { "password", m_password },
-                        { idKey, m_loginId },
-                        { pwdKey, m_password }
+                        { "idKey", m_loginId },
+                        { "pwdKey", m_password }
                     };
                     httpReqMsg.Content = new FormUrlEncodedContent(postData);
                     var postResponse1 = await m_client.SendAsync(httpReqMsg);
